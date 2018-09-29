@@ -3,9 +3,11 @@
 
 Spam filters basically keep statistics of which words were seen in messages that were classified as ham or spam. For this notebook, I was curious: at first, could I compile statistics on the usage of words by few peoples, then with these statistics in hand, identify the probable author of a snipet of text?
 
+Intuition: If we know how Obama or Trump normally write, can we take a tweet, and from how it is written, identify who wrote it?
+
 The success of this exercise highly depends on the quality of the text used as sources. However, it's an interesting toy project. 
 
-I know that the subject is polarising, but I went with the last two US Presidents speeches for content.
+Because of the quantity of transcripts available, I chose to use texts from Obama and Trump.
 
 Sources:
 * Obama: few first speeches from http://obamaspeeches.com/ 
