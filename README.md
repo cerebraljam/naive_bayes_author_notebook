@@ -349,15 +349,16 @@ Experimentation notes: I did perform some test by setting a 49% probability inst
 
 
 ```python
-def analyse_texts(prior, texts, probabilities, debug):
+def analyse_texts(prior, texts, probabilities_author, probabilities_others, debug):
     posterior = prior
     tests = {}
 
     for tt in texts:
-        prob = probabilities.loc[probabilities['word'] == tt]
+        prob = probabilities_author.loc[probabilities_author['word'] == tt]
+        prob_others = probabilities_others.loc[probabilities_others['word'] == tt]
 
         if tt not in tests.keys():
-            if not prob.empty:
+            if not prob.empty: # if the searched word was used by the current author
                 tests[tt] = {
                     'True': {
                         'Positive': prob.head(1)['tp'].values[0],
@@ -368,7 +369,18 @@ def analyse_texts(prior, texts, probabilities, debug):
                         'Negative': prob.head(1)['fn'].values[0]
                     }
                 }
-            else:
+            elif not prob_others.empty: # if the word was not used by the author, check for other authors
+                tests[tt] = {
+                    'True': {
+                        'Positive': prob_others.head(1)['tp'].values[0],
+                        'Negative': prob_others.head(1)['tn'].values[0]
+                    },
+                    'False': {
+                        'Positive': prob_others.head(1)['fp'].values[0],
+                        'Negative': prob_others.head(1)['fn'].values[0]
+                    }
+                }
+            else: # if it's the first time we see a word, assign a probability of 50%
                 tests[tt] = {
                     'True': {
                         'Positive': 0.5,
@@ -381,6 +393,8 @@ def analyse_texts(prior, texts, probabilities, debug):
                 }
         if not prob.empty:
             posterior = update_probability(posterior, tt, tests, 'True', debug)
+        elif not prob_others.empty:
+            posterior = update_probability(posterior, tt, tests, 'False', debug)
         else:
             posterior = update_probability(posterior, tt, tests, 'False', debug)
 
@@ -393,7 +407,7 @@ def lookup_text(lines, prior, metrics):
     for ll in lines:
         print('Given the text "{}"...'.format(" ".join(ll)))
         for author in prior.keys():
-            posterior = analyse_texts(prior[author], ll, metrics.loc[metrics['author'] == author], False)
+            posterior = analyse_texts(prior[author], ll, metrics.loc[metrics['author'] == author], metrics.loc[metrics['author'] != author], False)
             print("\tProbability that {} wrote this text is: {:.3f}%".format(author, 100 * posterior))
         print("\n")
 ```
@@ -453,33 +467,33 @@ posterior = lookup_text(clean_lines_of_texts, prior, metrics)
 ```
 
     Given the text "the antidote to government by a powerful few is government by the organized energized many this national voter registration day make sure you're registered vote early if you can or show up on november 6 this moment is too important to sit out"...
-    	Probability that obama wrote this text is: 10.917%
-    	Probability that trump wrote this text is: 11.868%
+    	Probability that obama wrote this text is: 42.131%
+    	Probability that trump wrote this text is: 57.869%
     
     
     Given the text "judge kavanaugh showed america exactly why i nominated him his testimony was powerful honest and riveting democrats search and destroy strategy is disgraceful and this process has been a total sham and effort to delay obstruct and resist the senate must vote"...
-    	Probability that obama wrote this text is: 62.327%
-    	Probability that trump wrote this text is: 90.909%
+    	Probability that obama wrote this text is: 9.934%
+    	Probability that trump wrote this text is: 90.066%
     
     
     Given the text "congressman lee zeldin is doing a fantastic job in d c tough and smart he loves our country and will always be there to do the right thing he has my complete and total endorsement"...
-    	Probability that obama wrote this text is: 23.529%
-    	Probability that trump wrote this text is: 96.774%
+    	Probability that obama wrote this text is: 2.500%
+    	Probability that trump wrote this text is: 97.500%
     
     
     Given the text "we will always remember everyone we lost on 9 11 thank the first responders who keep us safe and honor all who defend our country and the ideals that bind us together there's nothing our resilience and resolve can t overcome and no act of terror can ever change who we are"...
-    	Probability that obama wrote this text is: 98.361%
-    	Probability that trump wrote this text is: 0.711%
+    	Probability that obama wrote this text is: 99.988%
+    	Probability that trump wrote this text is: 0.012%
     
     
     Given the text "yesterday i met with high school students on chicago s southwest side who spent the summer learning to code some pretty cool apps michelle and i are proud to support programs that invest in local youth and we re proud of these young people"...
-    	Probability that obama wrote this text is: 99.174%
-    	Probability that trump wrote this text is: 1.550%
+    	Probability that obama wrote this text is: 99.956%
+    	Probability that trump wrote this text is: 0.044%
     
     
     Given the text "going to new york will be with prime minister abe of japan tonight talking military and trade we have done much to help japan would like to see more of a reciprocal relationship it will all work out"...
-    	Probability that obama wrote this text is: 16.667%
-    	Probability that trump wrote this text is: 85.039%
+    	Probability that obama wrote this text is: 3.399%
+    	Probability that trump wrote this text is: 96.601%
     
     
 
@@ -488,5 +502,6 @@ posterior = lookup_text(clean_lines_of_texts, prior, metrics)
 
 This notebook uses Naive Bayes, which naively consider each word as independent events. This isn't true in reality, but allows us to run a simple function over all words without too much computer horse power. 
 
+* Add more authors, which will give a better distribution of common words, and make the one less used stand out.
 * The accuracy could most probably be improved by using markov chains. To do in a future notebook...
 * An other approach would be through machine learning, whatever the model used... also for a future notebook.
