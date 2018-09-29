@@ -19,7 +19,7 @@ And for the snipet of text, I used twitter:
 * tweet 5: https://twitter.com/BarackObama/status/1034892109868945409
 * tweet 6: https://twitter.com/realDonaldTrump/status/1043966388182953984
 
-**Spoiler**: Using these 6 examples, we have a 5/6 success rate, which isn't perfect, but still, it's a good start. The first tweet comes out negative (<12%) for both.
+**Spoiler**: Using these 6 examples, we have a 5/6 success rate, which isn't perfect, but still, it's a good start. The first tweet comes out negative, under 60% for both.
 
 
 ```python
